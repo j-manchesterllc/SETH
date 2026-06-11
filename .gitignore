@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.yarn/cache
+.yarn/unplugged
+.yarn/install-state.gz
+.pnp.*
+
+# Build outputs
+.next/
+.build/
+out/
+dist/
+build/
+*.tgz
+
+# Environment & secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Debug & logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Generated
+*.tsbuildinfo
+next-env.d.ts
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# Deployment artifacts
+.deploy/
+
+# Yarn
+.yarn/
+
+# System files
+.abacus.donotdelete
+
+# Marketing / large binaries (optional — remove if you want these in repo)
+# public/SETH_Marketing_Brief.docx

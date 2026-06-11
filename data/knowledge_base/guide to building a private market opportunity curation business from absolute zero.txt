@@ -1,0 +1,135 @@
+Here is a detailed, actionable guide to building a private market opportunity curation business from absolute zero.
+
+## Phase 1: Foundation (Months 1-3)
+
+### Week 1-2: Legal & Regulatory Groundwork
+
+Your first step isn't finding a deal—it's ensuring you won't be breaking the law when you do. The finder vs. broker-dealer distinction is your primary legal concern.
+
+**Action Steps:**
+
+1. **Retain a securities attorney.** Find a lawyer who specializes in private placements and broker-dealer regulation. Expect to pay $500-1,500 for an initial consultation and agreement drafting.
+2. **Get your documents drafted:**
+   - **Non-Circumvent, Non-Disclosure, Non-Solicit (NNN) Agreement.** This is non-negotiable. It prevents capital partners from cutting you out of deals and protects the confidentiality of your deal flow. An NNN agreement surpasses the scope of a standard non-disclosure agreement by addressing the specific risks inherent in these collaborations. Never share a deal name or specifics before this is signed.
+   - **Finder/Advisory Agreement.** This contract between you and the capital source (or issuer) explicitly states you are not a registered broker-dealer, defines your limited role as making introductions, and outlines your success fee structure.
+3. **Research state law.** If you're in California, Texas, or New York, your regulatory risk is higher. Be aware of your state's specific requirements for finders.
+
+### Week 3-4: Build Your Central Intelligence File (CIF)
+
+This is your core asset. Start with a simple, encrypted structure (a password-protected spreadsheet is fine initially, but plan to migrate to an encrypted CRM like Salesforce Shield or Affinity).
+
+**Action Steps:**
+
+1. **Populate "Capital Sources" sheet:** Identify 100+ family offices, private credit funds, and secondary funds. Use free resources like LinkedIn, Crunchbase, and SEC filings. For each, record:
+   - Investment mandate (sector, stage, geography)
+   - Typical check size
+   - Key decision-makers and their backgrounds
+   - Recent deals they've done (publicly announced)
+2. **Populate "Originators" sheet:** Identify 100+ professionals who see deals before they're public. These include:
+   - Restructuring and turnaround advisors
+   - M&A attorneys at middle-market law firms
+   - Boutique investment bankers
+   - Fund formation lawyers
+   - Commercial bankers in special assets groups
+
+## Phase 2: Intelligence & Relationship Building (Months 4-6)
+
+Your goal here is not to pitch deals. It's to become a known, trusted, and valuable contact within your target ecosystem.
+
+### Month 4: Provide Value First
+
+**Action Steps:**
+
+1. **Create a "Market Intelligence" digest.** Spend a few hours each week curating news on a specific niche (e.g., "GP-led secondaries in the industrial sector"). Email this digest to 20-30 originators from your CIF. Do not ask for anything in return. The subject line should be simple: "Recent industrial GP-led activity."
+2. **Engage on LinkedIn.** Follow the people on your CIF list. Comment thoughtfully on their posts. Share relevant articles with your own brief analysis.
+
+### Month 5: The First Outreach
+
+**Action Steps:**
+
+1. **Contact 20-30 originators.** Your opening line is critical. Do not say, "I'm a finder looking for deals." Instead, use a variation of: *"I'm researching the lower-middle-market GP-led space and noticed your firm's work in [sector]. I'm building a network of capital partners focused on this area and would be happy to share my notes on recent secondary transactions if it's helpful."*
+2. **Record everything in your CIF.** After every call or email, log the response. Did they engage? What did they mention? This is your "pattern library."
+3. **Set a weekly goal:** Aim for 5-10 new, substantive conversations per week.
+
+### Month 6: Cultivating Early-Stage Deal Flow
+
+By now, a few originators should be responsive. You might hear about a "situation" that isn't yet a deal.
+
+**Action Steps:**
+
+1. **Ask the right question:** When an originator mentions a challenging situation, ask: *"What's the specific friction preventing this from being a simple process?"* This positions you as a problem-solver, not a commission-seeker.
+2. **Map relationships:** In your CIF, start drawing connections between the capital preferences you've documented and the friction points originators are describing.
+
+## Phase 3: Capital & Deal Pursuit (Months 7-12)
+
+This is where you shift from passive intelligence gathering to active deal pursuit.
+
+### Month 7-8: Capital Source Outreach
+
+**Action Steps:**
+
+1. **Contact 20-30 capital sources** (family offices, private credit funds). Use a similar value-first approach.
+2. **Ask the crucial question:** *"What specific type of opportunity do you want to see that you never seem to get offered?"*
+3. **Document the response verbatim in your CIF.** This is your matchmaking key.
+4. **Key Finding:** Club deals now account for up to 69% of family office investments overall, rising to 83% in the venture space. This is your entry point—family offices are actively seeking co-investment partners.
+
+### Month 9-10: Identifying a Target Deal
+
+You're looking for a deal that matches the criteria you've documented from capital sources. Focus on these three "ugly" categories:
+
+**Category 1: GP-Led Secondaries (Lower Middle Market)**
+GP-led volume reached ~$104 billion in 2025, a 50% YoY increase. Only 31% of mid-cap GPs have ever completed a GP-led secondary, creating a massive need for guidance. Look for funds holding companies past their 10-year term needing to provide LP liquidity.
+
+**Category 2: Credit-Stressed Special Situations**
+Private credit default rates increased to 5-6% in early 2026, compared with 1-3% historically. PIK loan usage is at 11%. This creates a pipeline of fundamentally sound businesses with temporary covenant breaches.
+
+**Category 3: Essential Industrial Assets**
+Family businesses with no succession plan, "boring" but cash-flowing assets, or companies with single-customer concentration that scare off institutional buyers.
+
+**Action Steps:**
+
+1. **Vet the opportunity.** Is the friction genuine? Is there a structural solution? Can you articulate it in one page?
+2. **Prepare a Situation Brief.** This is not a pitch deck. It's a one-page, factual document that explains the asset (anonymized), the specific friction, and the required structural solution. Use only verifiable statements. Example: *"The company's EBITDA has grown at a CAGR of 12% over three years. The covenant breach was triggered by a temporary supply chain disruption that has since been resolved."* This is curation, not investment advice.
+
+### Month 11-12: The First Close Attempt
+
+**Action Steps:**
+
+1. **Present to 1-3 pre-vetted capital sources.** Choose only those whose stated preferences align perfectly with the opportunity.
+2. **Facilitate the introduction.** This is a crucial, hands-off step. You introduce the parties via email, stating clearly: *"I'm connecting you based on our prior conversations. [Capital Source] is interested in [Friction Type]. [Originator] is handling a situation involving [Asset Description]. I'm not advising either party. Please connect directly."*
+3. **Step back.** Do not participate in negotiations. Do not discuss valuation. Your role is complete.
+4. **Monitor the process.** You can check in to ensure the connection was made, but your work is done.
+5. **Success Fee.** If the deal closes, you collect your 3-8% success fee. If it doesn't, log the lessons learned in your pattern library and start the cycle again.
+
+## Phase 4: Systematization & First Deal (Months 13-18)
+
+The first deal is the hardest. It's a proof of existence. Once you have one close, you have a track record. Use this phase to close 2-3 more deals using the exact same process.
+
+**Action Steps:**
+
+1. **Form a closed Syndicate** of the 5-8 capital partners you've successfully transacted with.
+2. **Offer a Right of First Refusal (ROFR)** on new opportunities in exchange for a monthly retainer ($5k-$10k, credited against success fees).
+3. **Launch a paid quarterly intelligence report** ($10k-$25k/year) with anonymized case studies and pattern analysis. This creates recurring revenue and establishes you as a trusted advisor.
+
+### The Transition to Independent Sponsor (Months 18-24+)
+
+After 3+ closed deals, you can transition to the principal model. You will source and structure deals yourself, form an SPV, and offer co-investment slices to your syndicate. You'll charge a closing fee (1-2% of enterprise value), a management fee (3-5% of EBITDA annually), and carried interest (20% of profits above an 8-10% preferred return).
+
+## Timeline & Real-World Checklist
+
+| Phase | Duration | Milestone |
+|---|---|---|
+| **Foundation** | Months 1-3 | Legal docs in place; CIF populated with 200+ contacts. |
+| **Intelligence** | Months 4-6 | 5-10 active originator relationships; first early-stage deal in view. |
+| **Capital & Deal Pursuit** | Months 7-12 | 5-10 active capital relationships; first Situation Brief drafted; first introduction made. |
+| **First Close** | Months 13-18 | 1-3 closed transactions; track record established. |
+| **Systematization** | Months 19-24 | Syndicate formed; recurring revenue from retainer/intelligence report. |
+| **Principal Model** | Year 3+ | First SPV closed as independent sponsor. |
+
+## Critical Resources & Final Advice
+
+- **Do not use free templates.** The cost of a poorly drafted NNN or Finder Agreement is not the legal fee you save; it's the deal you lose or the enforcement action you face.
+- **Capital required:** You need 12-24 months of living expenses saved. You will not generate meaningful revenue quickly.
+- **If you get stuck:** Re-evaluate your deal selection criteria, capital matching, and originator relationships. Adjust and run the cycle again. Persistence is the primary differentiator.
+
+This is the map. The journey is yours.
