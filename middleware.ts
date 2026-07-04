@@ -26,4 +26,5 @@ export const config = {
      */
     "/((?!_static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
+  runtime: 'nodejs',
 };
