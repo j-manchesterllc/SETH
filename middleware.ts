@@ -1,30 +1,18 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-
-// Import the Supabase client creation function from utils
-import { createClient } from "./utils/supabase/middleware";
+import { NextResponse, type NextRequest } from 'next/server'
+import { createClient } from './utils/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-  // Create Supabase client configured for middleware
-  const supabase = createClient(request);
+  const { supabase, response } = createClient(request)
 
-  // Refresh session if expired - required for Server Components
-  await supabase.auth.getSession();
+  // Refresh session if needed (keeps cookies alive)
+  await supabase.auth.getSession()
 
-  // Continue with the request
-  return NextResponse.next();
+  // Add custom auth logic here if required
+  // e.g., redirect unauthenticated users from /dashboard
+
+  return response
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - images - .svg, .png, .jpg, .jpeg, .gif, .webp
-     */
-    "/((?!_static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
-  runtime: 'nodejs',
-};
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+}
