@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { dispatchToAgent } from '@/lib/agents'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { Agent } from '@prisma/client'
 
 /**
  * POST /api/agents/monitor
@@ -34,7 +35,7 @@ export async function POST() {
     })
 
     // Filter to agents whose last check was long enough ago
-    const dueAgents = agents.filter(agent => {
+    const dueAgents = agents.filter((agent: Agent) => {
       if (!agent.lastMonitorAt) return true
       const minutesSince = (now.getTime() - agent.lastMonitorAt.getTime()) / 60_000
       return minutesSince >= agent.monitorInterval
@@ -77,7 +78,7 @@ export async function POST() {
     // Process up to 3 agents per cycle to avoid timeout
     for (const agent of dueAgents.slice(0, 3)) {
       try {
-        const monitorPrompt = `You are running an autonomous monitoring scan. Check your domain for the following:\n\n"${agent.monitorQuery}"\n\nAnalyze the current situation. If there is something noteworthy to report, respond with a JSON object:\n{ "hasAlert": true, "severity": "info|warning|critical", "summary": "one-line summary", "detail": "2-3 sentence analysis" }\n\nIf nothing noteworthy, respond with:\n{ "hasAlert": false, "summary": "All clear" }\n\nReturn ONLY valid JSON.`
+        const monitorPrompt = `You are running an autonomous monitoring scan. Check your domain for the following:\n\n\"${agent.monitorQuery}\"\n\nAnalyze the current situation. If there is something noteworthy to report, respond with a JSON object:\n{ \"hasAlert\": true, \"severity\": \"info|warning|critical\", \"summary\": \"one-line summary\", \"detail\": \"2-3 sentence analysis\" }\n\nIf nothing noteworthy, respond with:\n{ \"hasAlert\": false, \"summary\": \"All clear\" }\n\nReturn ONLY valid JSON.`
 
         const result = await dispatchToAgent(
           agent.codename,
@@ -103,7 +104,7 @@ export async function POST() {
               alerts.push({
                 agentId: agent.id,
                 agentName: agent.name,
-                agentAvatar: agent.avatar ?? '\ud83e\udd16',
+                agentAvatar: agent.avatar ?? '\\ud83e\\udd16',
                 codename: agent.codename,
                 alert: parsed.detail || parsed.summary,
                 severity: parsed.severity || 'info',
@@ -116,7 +117,7 @@ export async function POST() {
               alerts.push({
                 agentId: agent.id,
                 agentName: agent.name,
-                agentAvatar: agent.avatar ?? '\ud83e\udd16',
+                agentAvatar: agent.avatar ?? '\\ud83e\\udd16',
                 codename: agent.codename,
                 alert: result.output.slice(0, 300),
                 severity: 'info',
