@@ -1,34 +1,30 @@
-import { createClient } from '@/utils/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export default async function Page() {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
+export const dynamic = 'force-dynamic'
 
-  const { data: todos, error } = await supabase
-    .from('todos')
-    .select('*')
+export default async function Page() {
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value
+        },
+      },
+    }
+  )
+
+  // Try to fetch the session to see if the connection works
+  const { data: { session }, error } = await supabase.auth.getSession()
 
   if (error) {
-    return (
-      <div>
-        <h1>Supabase Connection Test</h1>
-        <p>Error fetching todos: {error.message}</p>
-        <p>This is expected if the todos table doesn't exist yet.</p>
-        <p>Supabase client is properly configured!</p>
-      </div>
-    )
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 })
   }
 
-  return (
-    <div>
-      <h1>Supabase Connection Test</h1>
-      <p>Successfully connected to Supabase!</p>
-      <ul>
-        {todos?.map((todo) => (
-          <li key={todo.id}>{todo.name || 'Unnamed todo'}</li>
-        ))}
-      </ul>
-    </div>
-  )
+  return new Response(JSON.stringify({ session, timestamp: Date.now() }), {
+    headers: { 'Content-Type': 'application/json' },
+  })
 }
