@@ -1,22 +1,17 @@
 # SETH — Strategic Executive Technology Hub
-
+|
 <p align="center">
   <img src="public/seth-icon-512.png" alt="SETH" width="120" />
 </p>
+|
 
 <p align="center">
   <strong>The Operating System for Strategic Executives</strong><br />
   <em>Sovereign AI infrastructure that compounds with every interaction</em>
 </p>
-
-<p align="center">
-  <a href="https://sethassistant.digital">Live Product</a> ·
-  <a href="https://sethassistant.digital/investors">Investor Brief</a> ·
-  <a href="https://zero-daydynamics.com">Zero Day Dynamics</a>
-</p>
+|
 
 ---
-
 ## What is SETH?
 
 SETH replaces the fragmented stack of AI chatbots, human assistants, and productivity tools with a **single sovereign intelligence infrastructure** that sits between an executive and the world.
@@ -26,7 +21,6 @@ Unlike consumer AI assistants that reset every session, SETH maintains a **persi
 **After 90 days of use, SETH knows your decision patterns, strategic priorities, communication style, and operational rhythm better than any human assistant could. That's not a feature — it's a structural moat.**
 
 ---
-
 ## Architecture
 
 ```
@@ -60,7 +54,6 @@ Unlike consumer AI assistants that reset every session, SETH maintains a **persi
 ```
 
 ---
-
 ## Core Modules
 
 | Module | Description |
@@ -75,7 +68,6 @@ Unlike consumer AI assistants that reset every session, SETH maintains a **persi
 | **Integration Layer** | Native Google Calendar, Gmail, and productivity tool integration |
 
 ---
-
 ## Key Technical Features
 
 - **Multi-Model Routing** — Privacy-first Venice.ai + OpenRouter fallback chain with free/paid tiers
@@ -88,7 +80,6 @@ Unlike consumer AI assistants that reset every session, SETH maintains a **persi
 - **Progressive Web App** — Offline-capable service worker, installable, wearable-ready voice pipeline
 
 ---
-
 ## Getting Started
 
 ### Prerequisites
@@ -138,19 +129,17 @@ See [`.env.example`](.env.example) for all required and optional configuration.
 - `SKYBOX_API_KEY` — Environment generation
 
 ---
-
 ## Deployment
 
 SETH is currently deployed across three surfaces:
 
 | Domain | Purpose |
-|--------|----------|
+|--------|---------|
 | [sethassistant.digital](https://sethassistant.digital) | Primary product domain |
 | [zero-daydynamics.com](https://zero-daydynamics.com) | Corporate / brand domain |
 | [jarvisaiassistant.abacusai.app](https://jarvisaiassistant.abacusai.app) | Platform deployment |
 
 ---
-
 ## Project Structure
 
 ```
@@ -185,24 +174,18 @@ SETH is currently deployed across three surfaces:
 ```
 
 ---
-
 ## Revenue Model
 
 | Tier | Price | Target |
-|------|-------|---------|
+|------|-------|--------|
 | **Operator** | $297/mo | Individual executives |
 | **Principal** | $997/mo | High-volume executives with custom agents |
 | **Enterprise** | Custom | Multi-seat teams with SSO/SAML |
 
 ---
-
 ## License
 
 Proprietary. All rights reserved.
 
 ---
-
-<p align="center">
-  <strong>SETH</strong> — Infrastructure masquerading as interface.<br />
-  <em>Built by <a href="https://zero-daydynamics.com">Zero Day Dynamics</a></em>
-</p>
+# Trigger redeploy
