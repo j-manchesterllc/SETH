@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 
 // Prevent static generation – this route must be server‑side rendered
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET(
   request: Request,

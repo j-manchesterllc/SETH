@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic'
-
+export const revalidate = 0
 import { resolveAuth } from '@/lib/wearable-auth'
 import { startTrace, annotate, endTrace } from '@/lib/telemetry'
 

@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic'
-
+export const revalidate = 0
 import { prisma } from '@/lib/prisma'
 import { runMemoryDecay, generateSemanticTags, enrichMemoryAsync } from '@/lib/cortex'
 import { generateEmbedding, serializeEmbedding, EMBEDDING_MODEL_TAG } from '@/lib/embeddings'
