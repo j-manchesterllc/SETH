@@ -54,3 +54,8 @@ prisma/*.db-journal
 
 # Marketing / large binaries (optional — remove if you want these in repo)
 # public/SETH_Marketing_Brief.docx
+.env*
+-e 
+# Vercel
+.vercel
+.env.local

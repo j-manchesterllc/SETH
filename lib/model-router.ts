@@ -1,18 +1,19 @@
 /**
  * Seth Intelligent Model Router
- * 
- * Routes requests across 3 tiers based on task complexity:
+ *
+ * Routes requests across 4 tiers based on task complexity:
  * - Tier 1 (Privacy/Default): Venice venice-uncensored — general chat, strategic advice, uncensored
  * - Tier 2 (Free/Grunt Work): OpenRouter free models — tool classification, simple lookups
  * - Tier 3 (Paid/Complex): OpenRouter paid models — deep analysis, code gen, multi-step reasoning
+ * - Tier 4 (Gateway): Vercel AI Gateway — GPT-4o / GPT-5.5 via OIDC, no API key needed
  */
 
-export type ModelTier = 'privacy' | 'free' | 'paid'
+export type ModelTier = 'privacy' | 'free' | 'paid' | 'gateway'
 
 export interface ModelConfig {
   tier: ModelTier
   model: string
-  provider: 'venice' | 'openrouter'
+  provider: 'venice' | 'openrouter' | 'gateway'
   apiUrl: string
   reason: string
 }
@@ -20,6 +21,7 @@ export interface ModelConfig {
 // --- Provider configs ---
 const VENICE_URL = 'https://api.venice.ai/api/v1/chat/completions'
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
+const GATEWAY_URL = 'https://ai-gateway.vercel.sh/v1/chat/completions'
 
 // --- Model catalog ---
 const MODELS = {
@@ -37,6 +39,10 @@ const MODELS = {
   // Tier 3: Paid (OpenRouter) — cheap but powerful
   deepseek_v4_pro: { id: 'deepseek/deepseek-v4-pro', provider: 'openrouter' as const, url: OPENROUTER_URL },
   gpt41_mini: { id: 'openai/gpt-4.1-mini', provider: 'openrouter' as const, url: OPENROUTER_URL },
+
+  // Tier 4: Vercel AI Gateway — OIDC-authenticated, no separate API key
+  gateway_gpt4o: { id: 'openai/gpt-4o', provider: 'gateway' as const, url: GATEWAY_URL },
+  gateway_gpt55: { id: 'openai/gpt-5.5', provider: 'gateway' as const, url: GATEWAY_URL },
 } as const
 
 // Ordered fallback chains
@@ -50,6 +56,11 @@ const FREE_FALLBACKS = [
 const PAID_FALLBACKS = [
   MODELS.deepseek_v4_pro,
   MODELS.gpt41_mini,
+]
+
+const GATEWAY_FALLBACKS = [
+  MODELS.gateway_gpt4o,
+  MODELS.gateway_gpt55,
 ]
 
 // --- Complexity classification ---
@@ -247,6 +258,9 @@ export function buildHeaders(config: ModelConfig): Record<string, string> {
 
   if (config.provider === 'venice') {
     headers['Authorization'] = `Bearer ${process.env.VENICE_API_KEY}`
+  } else if (config.provider === 'gateway') {
+    // Vercel AI Gateway: authenticate via OIDC token (no separate API key needed)
+    headers['Authorization'] = `Bearer ${process.env.VERCEL_OIDC_TOKEN}`
   } else {
     headers['Authorization'] = `Bearer ${process.env.OPENROUTER_API_KEY}`
     headers['HTTP-Referer'] = process.env.NEXTAUTH_URL ?? 'https://sethassistant.digital'
@@ -254,6 +268,39 @@ export function buildHeaders(config: ModelConfig): Record<string, string> {
   }
 
   return headers
+}
+
+/**
+ * Returns true if the Vercel AI Gateway is available in this runtime.
+ * In production Vercel deployments VERCEL_OIDC_TOKEN is injected automatically.
+ */
+export function isGatewayAvailable(): boolean {
+  return !!process.env.VERCEL_OIDC_TOKEN
+}
+
+/**
+ * Route a request through the Vercel AI Gateway.
+ * Falls back to openrouter paid tier if OIDC token is unavailable.
+ */
+export function routeForGateway(preferredModel: 'gpt-4o' | 'gpt-5.5' = 'gpt-4o'): ModelConfig {
+  if (!isGatewayAvailable()) {
+    // Fallback to paid OpenRouter if not running on Vercel
+    return {
+      tier: 'paid',
+      model: MODELS.gpt41_mini.id,
+      provider: MODELS.gpt41_mini.provider,
+      apiUrl: MODELS.gpt41_mini.url,
+      reason: 'Gateway unavailable (no OIDC token) → OpenRouter paid fallback',
+    }
+  }
+  const m = preferredModel === 'gpt-5.5' ? MODELS.gateway_gpt55 : MODELS.gateway_gpt4o
+  return {
+    tier: 'gateway',
+    model: m.id,
+    provider: m.provider,
+    apiUrl: m.url,
+    reason: `Vercel AI Gateway → ${m.id} (OIDC auth)`,
+  }
 }
 
 export function buildRequestBody(
