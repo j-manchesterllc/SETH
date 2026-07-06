@@ -30,7 +30,6 @@ const MODELS = {
   venice_qwen3: { id: 'qwen3-235b-a22b-instruct-2507', provider: 'venice' as const, url: VENICE_URL },
 
   // Tier 2: Free (OpenRouter)
-  deepseek_r1_free: { id: 'deepseek/deepseek-r1:free', provider: 'openrouter' as const, url: OPENROUTER_URL },
   deepseek_chat_free: { id: 'deepseek/deepseek-chat-v3-0324:free', provider: 'openrouter' as const, url: OPENROUTER_URL },
   gemma4_31b_free: { id: 'google/gemma-4-31b-it:free', provider: 'openrouter' as const, url: OPENROUTER_URL },
   nemotron_free: { id: 'nvidia/nemotron-3-super-120b-a12b:free', provider: 'openrouter' as const, url: OPENROUTER_URL },
@@ -49,15 +48,15 @@ const MODELS = {
 
 // Ordered fallback chains
 const FREE_FALLBACKS = [
-  MODELS.deepseek_chat_free,
-  MODELS.deepseek_r1_free,
-  MODELS.gemma4_31b_free,
   MODELS.nemotron_free,
+  MODELS.gemma4_31b_free,
+  MODELS.qwen3_coder_free,
+  MODELS.deepseek_chat_free,
 ]
 
 const PAID_FALLBACKS = [
-  MODELS.deepseek_v4_pro,
   MODELS.gpt41_mini,
+  MODELS.deepseek_v4_pro,
 ]
 
 // Gateway fallback chain: Claude Sonnet → Claude Haiku → GPT-4o → GPT-5.5
