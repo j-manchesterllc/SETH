@@ -41,6 +41,8 @@ const MODELS = {
   gpt41_mini: { id: 'openai/gpt-4.1-mini', provider: 'openrouter' as const, url: OPENROUTER_URL },
 
   // Tier 4: Vercel AI Gateway — OIDC-authenticated, no separate API key
+  gateway_claude_sonnet: { id: 'anthropic/claude-sonnet-4-5', provider: 'gateway' as const, url: GATEWAY_URL },
+  gateway_claude_haiku: { id: 'anthropic/claude-haiku-4-5', provider: 'gateway' as const, url: GATEWAY_URL },
   gateway_gpt4o: { id: 'openai/gpt-4o', provider: 'gateway' as const, url: GATEWAY_URL },
   gateway_gpt55: { id: 'openai/gpt-5.5', provider: 'gateway' as const, url: GATEWAY_URL },
 } as const
@@ -58,7 +60,10 @@ const PAID_FALLBACKS = [
   MODELS.gpt41_mini,
 ]
 
+// Gateway fallback chain: Claude Sonnet → Claude Haiku → GPT-4o → GPT-5.5
 const GATEWAY_FALLBACKS = [
+  MODELS.gateway_claude_sonnet,
+  MODELS.gateway_claude_haiku,
   MODELS.gateway_gpt4o,
   MODELS.gateway_gpt55,
 ]
@@ -282,7 +287,9 @@ export function isGatewayAvailable(): boolean {
  * Route a request through the Vercel AI Gateway.
  * Falls back to openrouter paid tier if OIDC token is unavailable.
  */
-export function routeForGateway(preferredModel: 'gpt-4o' | 'gpt-5.5' = 'gpt-4o'): ModelConfig {
+export type GatewayModel = 'claude-sonnet' | 'claude-haiku' | 'gpt-4o' | 'gpt-5.5'
+
+export function routeForGateway(preferredModel: GatewayModel = 'claude-sonnet'): ModelConfig {
   if (!isGatewayAvailable()) {
     // Fallback to paid OpenRouter if not running on Vercel
     return {
@@ -293,7 +300,13 @@ export function routeForGateway(preferredModel: 'gpt-4o' | 'gpt-5.5' = 'gpt-4o')
       reason: 'Gateway unavailable (no OIDC token) → OpenRouter paid fallback',
     }
   }
-  const m = preferredModel === 'gpt-5.5' ? MODELS.gateway_gpt55 : MODELS.gateway_gpt4o
+  const modelMap: Record<GatewayModel, typeof MODELS[keyof typeof MODELS]> = {
+    'claude-sonnet': MODELS.gateway_claude_sonnet,
+    'claude-haiku': MODELS.gateway_claude_haiku,
+    'gpt-4o': MODELS.gateway_gpt4o,
+    'gpt-5.5': MODELS.gateway_gpt55,
+  }
+  const m = modelMap[preferredModel]
   return {
     tier: 'gateway',
     model: m.id,

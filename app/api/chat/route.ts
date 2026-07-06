@@ -8,6 +8,8 @@ import { buildMessagesWithMemories } from '@/lib/venice'
 import { SETH_TOOLS, executeTool } from '@/lib/tools'
 import {
   routeForChat,
+  routeForGateway,
+  isGatewayAvailable,
   routeForToolDetection,
   getToolDetectionFallback,
   getChatFallback,
@@ -203,7 +205,12 @@ Rules:
 
     // --- Intelligent Model Routing ---
     const chatStartTime = Date.now()
-    const chatRoute = routeForChat(message)
+    // Use Vercel AI Gateway (Claude Sonnet) for complex tasks when available;
+    // fall back to Venice/OpenRouter routing otherwise.
+    const baseRoute = routeForChat(message)
+    const chatRoute = (baseRoute.tier === 'paid' && isGatewayAvailable())
+      ? routeForGateway('claude-sonnet')
+      : baseRoute
     let toolRoute = routeForToolDetection()
     annotate(trace, {
       chatModel: chatRoute.model,

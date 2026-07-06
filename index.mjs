@@ -1,7 +1,7 @@
 import { streamText } from 'ai'
 
 const result = streamText({
-  model: 'openai/gpt-5.5',
+  model: 'anthropic/claude-sonnet-4-5',
   prompt: 'Explain quantum computing in simple terms.',
 })
 
