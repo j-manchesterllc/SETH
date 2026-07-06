@@ -4,6 +4,11 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { runBrowserAutomation } from '@/lib/browser-automate-core'
 
+// Guard: fail fast with a clear message if Browserless is not configured
+if (!process.env.BROWSERLESS_API_TOKEN) {
+  console.warn('[browser-automate] BROWSERLESS_API_TOKEN not set — browser automation disabled')
+}
+
 /**
  * POST /api/browser-automate
  * Accepts a natural-language task description, generates a Puppeteer script via LLM,
@@ -27,6 +32,10 @@ export async function POST(request: Request) {
 
     if (!task) {
       return Response.json({ error: 'Task description is required' }, { status: 400 })
+    }
+
+    if (!process.env.BROWSERLESS_API_TOKEN) {
+      return Response.json({ error: 'Browser automation is not configured on this server.' }, { status: 503 })
     }
 
     const result = await runBrowserAutomation(userId, task, url, automationId)
