@@ -1,680 +1,118 @@
 generator client {
-    provider = "prisma-client-js"
-    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
-    output = "../node_modules/.prisma/client"
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+  output = "../node_modules/.prisma/client"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  emailVerified DateTime?
-  name          String?
-  image         String?
-  password      String?
-  objectives    String?   @db.Text
-  preferences   String?   @db.Text
-  workingStyle  String?   @db.Text
-  apiKey        String?   @unique
-  apiKeyHash    String?
-  apiKeyPrefix  String?   @unique
-  googleSsoDisabled Boolean @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  conversations Conversation[]
-  memories      Memory[]
-  tasks         Task[]
-  watches       Watch[]
-  accounts      Account[]
-  sessions      Session[]
-  automations    BrowserAutomation[]
-  agentLogs      AgentLog[]
-  agents         Agent[]
-  brandProfiles  BrandProfile[]
-  cortexObservations    CortexObservation[]
-  cortexPatterns        CortexPattern[]
-  cortexReflections     CortexReflection[]
-  cortexLearningJobs    CortexLearningJob[]
-  cortexContradictions  CortexContradiction[]
-  cortexEntities        CortexEntity[]
-  cortexRelations       CortexRelation[]
-  cortexProjects        CortexProject[]
-  cortexInsights        CortexInsight[]
-  skills                Skill[]
-  userPreference        UserPreference?
+// ─── OPERATOR VAULT (encrypted credentials) ──────────────────────────────
+model UserVault {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  plaidAccessTokenEncrypted String?
+  apifyTokenEncrypted       String?
+  socialTokensEncrypted     Json?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state             String?
-  refresh_token_expires_in  Int?
-  user                      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
-model Conversation {
-  id              String    @id @default(cuid())
-  userId          String
-  title           String    @default("New Conversation")
-  decisionContext String?   @db.Text  // strategic question anchoring this thread
-  environmentUrl  String?             // generated 360° panorama URL for this decision
-  environmentThumb String?            // thumbnail URL for conversation list
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages        Message[]
-
-  @@index([userId])
-}
-
-model Message {
-  id             String       @id @default(cuid())
-  conversationId String
-  role           String       // user | assistant | system
-  content        String       @db.Text
-  createdAt      DateTime     @default(now())
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-
-  @@index([conversationId])
-}
-
-model Memory {
-  id             String   @id @default(cuid())
-  userId         String
-  type           String   // context | decision | preference | note
-  content        String   @db.Text
-  importance     Int      @default(5) // 1-10
-  tags           String?  // comma-separated
-  semanticTags   String?  @db.Text // LLM-generated normalized concepts for semantic search (JSON array)
-  embedding      String?  @db.Text // JSON float array — application-level vector embedding for cosine similarity
-  embeddingModel String?           // model used to generate the embedding (for versioning)
-  // Cortex Memory Decay fields
-  strength       Float    @default(1.0) // 0.0-1.0, decays over time
-  accessCount    Int      @default(0)   // times retrieved/referenced
-  lastAccessedAt DateTime? // last time this memory was used in context
-  decayRate      Float    @default(0.02) // how fast strength decays (per day)
-  pinned         Boolean  @default(false) // pinned memories never decay
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([type])
-  @@index([userId, strength])
-}
-
-model Task {
-  id              String    @id @default(cuid())
-  userId          String
-  title           String
-  description     String?   @db.Text
-  status          String    @default("pending") // pending | in-progress | completed
-  autonomyLevel   Int       @default(3) // 1-4
-  priority        String    @default("medium") // high | medium | low
-  dueDate         DateTime?
-  executedAt      DateTime?
-  executionResult String?   @db.Text
-  notifiedAt          DateTime? // last deadline notification sent
-  pendingAction       String?   @db.Text // proposed action for Level 2-3 (JSON)
-  pendingActionStatus String?   // pending_approval | approved | rejected
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([status])
-  @@index([dueDate])
-}
-
-model Watch {
-  id          String    @id @default(cuid())
-  userId      String
-  name        String
-  type        String    // news | price | custom
-  query       String    @db.Text
-  threshold   String?   // e.g. "below $50000" for price, "any mention" for news
-  frequency   String    @default("daily") // hourly | daily | weekly
-  active      Boolean   @default(true)
-  lastChecked DateTime?
-  lastResult  String?   @db.Text
-  lastAlerted DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([active])
-}
-
-model AgentLog {
-  id            String   @id @default(cuid())
-  userId        String
-  messageId     String?  // conversation message that triggered this
-  action        String   // chat, tool_call, auto_execute, consolidation, reprioritize
-  tier          String?  // privacy, free, paid
-  model         String?  // model ID used
-  provider      String?  // venice, openrouter
-  toolName      String?  // tool name if action=tool_call
-  inputTokens   Int?
-  outputTokens  Int?
-  latencyMs     Int?
-  success       Boolean  @default(true)
-  error         String?  @db.Text
-  metadata      String?  @db.Text // JSON string for extra data
-  createdAt     DateTime @default(now())
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([createdAt])
-  @@index([action])
-}
-
-model Agent {
-  id            String   @id @default(cuid())
-  userId        String
-  name          String           // e.g. "Sentinel", "Architect", "Oracle"
-  codename      String           // lowercase slug: sentinel, architect, oracle
-  role          String           // research, financial, communications, opsec, brand, custom
-  description   String   @db.Text
-  systemPrompt  String   @db.Text // the agent's personality + instructions
-  capabilities  String?  @db.Text // JSON array of capability tags
-  tier          String   @default("free") // privacy, free, paid — default routing tier
-  status        String   @default("standby") // standby, active, disabled
-  avatar        String?          // emoji or icon identifier
-  totalRuns       Int      @default(0)
-  successRate     Float    @default(100)
-  lastActiveAt    DateTime?
-  // Autonomous monitoring config
-  monitorEnabled  Boolean  @default(false)
-  monitorQuery    String?  @db.Text  // what to watch for (natural language)
-  monitorInterval Int      @default(60)  // minutes between checks
-  lastMonitorAt   DateTime?
-  lastMonitorResult String? @db.Text  // last monitoring result
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  avgLatencyMs    Int?             // rolling average latency
-  domainScores    String?  @db.Text // JSON: { domain: score } refined by routing feedback
-  dispatches      AgentDispatch[]
-  routingDecisions RoutingDecision[]
-
-  @@index([userId])
-  @@index([codename])
-  @@index([role])
-  @@index([userId, monitorEnabled])
-}
-
-model AgentDispatch {
-  id          String   @id @default(cuid())
-  agentId     String
-  userId      String
-  input       String   @db.Text  // what was sent to the agent
-  output      String?  @db.Text  // agent's response
-  tier        String?            // actual model tier used
-  model       String?            // actual model used
-  latencyMs   Int?
-  success     Boolean  @default(true)
-  error       String?  @db.Text
-  metadata    String?  @db.Text  // JSON extra data
-  createdAt   DateTime @default(now())
-  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
-
-  @@index([agentId])
-  @@index([userId])
-  @@index([createdAt])
-}
-
-model RoutingDecision {
-  id              String   @id @default(cuid())
-  userId          String
-  taskInput       String   @db.Text
-  taskDomain      String?            // detected domain: research, financial, comms, etc.
-  selectedAgentId String?
-  selectedAgent   Agent?   @relation(fields: [selectedAgentId], references: [id], onDelete: SetNull)
-  candidateScores String?  @db.Text  // JSON: [{ agentId, codename, score, reasons }]
-  routingMethod   String   @default("adaptive") // keyword, adaptive, llm, multi-agent
-  multiAgent      Boolean  @default(false)
-  teamAgentIds    String?  @db.Text  // JSON array of agent IDs for multi-agent
-  confidence      Float    @default(0)
-  latencyMs       Int?               // routing decision latency
-  outcome         String?            // positive, negative, neutral (filled after dispatch)
-  feedback        String?  @db.Text  // post-dispatch quality signal
-  createdAt       DateTime @default(now())
-
-  @@index([userId])
-  @@index([taskDomain])
-  @@index([createdAt])
-  @@index([selectedAgentId])
-}
-
-model BrandProfile {
-  id              String   @id @default(cuid())
-  userId          String
-  brandName       String
-  tagline         String?
-  mission         String?  @db.Text
-  vision          String?  @db.Text
-  voiceTone       String?  @db.Text  // JSON: { tone, personality, vocabulary, avoid }
-  targetAudience  String?  @db.Text  // JSON: demographics, psychographics
-  competitors     String?  @db.Text  // JSON array of competitor profiles
-  visualIdentity  String?  @db.Text  // JSON: colors, fonts, imagery style
-  contentPillars  String?  @db.Text  // JSON array of content themes
-  brandValues     String?  @db.Text  // JSON array of core values
-  positioning     String?  @db.Text  // positioning statement
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  audits          BrandAudit[]
-  ablations       BrandAblation[]
-  scheduledPosts   ScheduledPost[]
-  brandMentions    BrandMention[]
-
-  @@index([userId])
-}
-
-model BrandAudit {
-  id                   String   @id @default(cuid())
-  brandProfileId       String
-  type                 String           // voice_check, competitor_scan, mention_scan, content_review
-  input                String?  @db.Text
-  result               String   @db.Text // JSON analysis results
-  score                Float?           // 0-100 score if applicable
-  weightProfileVersion String?          // SHA-256 hash of SOURCE_CONFIGS weights + WEIGHT_PROFILES at audit time
-  sourceExclusions     String?          // comma-separated source keys excluded (ablation runs)
-  createdAt            DateTime @default(now())
-  brandProfile         BrandProfile @relation(fields: [brandProfileId], references: [id], onDelete: Cascade)
-
-  @@index([brandProfileId])
-  @@index([type])
-  @@index([weightProfileVersion])
-}
-
-model BrandAblation {
-  id                String   @id @default(cuid())
-  brandProfileId    String
-  mode              String           // null | ablate | shuffle | full
-  auditType         String           // voice_check, competitor_scan, content_review, strategic_alignment
-  repsPerCondition  Int              // N repetitions per condition
-  temperature       Float   @default(0)
-  profileVersion    String?          // WEIGHT_PROFILE_VERSION at run time
-  conditions        String  @db.Text // JSON: [{label, scores[], mean, stddev, sourceExclusions?}]
-  noiseFloor        String? @db.Text // JSON: {mean, stddev, scores[]} from null runs
-  verdictMatrix     String? @db.Text // JSON: [{source, delta, classification, signal}]
-  status            String  @default("running") // running | completed | failed
-  error             String? @db.Text
-  createdAt         DateTime @default(now())
-  completedAt       DateTime?
-  brandProfile      BrandProfile @relation(fields: [brandProfileId], references: [id], onDelete: Cascade)
-
-  @@index([brandProfileId])
-  @@index([mode])
-  @@index([auditType])
-}
-
-model ScheduledPost {
-  id             String    @id @default(cuid())
-  brandProfileId String
-  platform       String    // twitter | linkedin | instagram | facebook | tiktok
-  content        String    @db.Text
-  mediaUrl       String?   // optional image/video URL
-  scheduledFor   DateTime
-  status         String    @default("scheduled") // scheduled | published | failed | cancelled
-  publishedAt    DateTime?
-  errorMessage   String?
-  hashtags       String?   // comma-separated
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  brandProfile   BrandProfile @relation(fields: [brandProfileId], references: [id], onDelete: Cascade)
-
-  @@index([brandProfileId])
-  @@index([status])
-  @@index([scheduledFor])
-}
-
-model BrandMention {
-  id             String   @id @default(cuid())
-  brandProfileId String
-  platform       String   // twitter | linkedin | reddit | news | blog
-  source         String   // author/publication name
-  sourceUrl      String?  // link to mention
-  content        String   @db.Text // excerpt or summary
-  sentiment      String   @default("neutral") // positive | neutral | negative
-  reach          Int?     // estimated audience
-  detectedAt     DateTime @default(now())
-  isReviewed     Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  brandProfile   BrandProfile @relation(fields: [brandProfileId], references: [id], onDelete: Cascade)
-
-  @@index([brandProfileId])
-  @@index([sentiment])
-  @@index([detectedAt])
-}
-
-model BrowserAutomation {
-  id              String    @id @default(cuid())
-  userId          String
-  taskDesc        String    @db.Text
-  targetUrl       String?
-  status          String    @default("pending") // pending | running | completed | failed | partial
-  actionPlan      String?   @db.Text   // structured JSON action plan (replaces raw script)
-  script          String?   @db.Text   // compiled executor script (derived from action plan)
-  result          String?   @db.Text   // execution result (JSON)
-  partialResult   String?   @db.Text   // intermediate results from completed steps
-  screenshotUrl   String?
-  error           String?   @db.Text
-  errorType       String?              // auth_error | rate_limited | timeout | script_error | network_error | security_block | validation_error
-  durationMs      Int?
-  retryCount      Int       @default(0)
-  executionPhase  String?              // planning | navigating | acting | extracting | screenshot
-  stepsTotal      Int?                 // total steps in action plan
-  stepsCompleted  Int?                 // steps completed before stop/error
-  idempotencyKey  String?              // prevent duplicate executions (checked in code)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([status])
-  @@index([createdAt])
-}
-
-// ─── Cortex Self-Improvement Module ─────────────────────────────────────
-
-model CortexObservation {
-  id          String   @id @default(cuid())
-  userId      String
-  source      String   // chat | task | calendar | email | automation | agent | memory
-  category    String   // workflow | decision | habit | priority | communication | focus | execution
-  event       String   @db.Text
-  metadata    String?  @db.Text // JSON
-  outcome     String?  // positive | neutral | negative
-  confidence  Float    @default(0.5)
-  importance  Int      @default(5)
-  createdAt   DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([source])
-  @@index([category])
-  @@index([createdAt])
-}
-
-model CortexPattern {
-  id              String   @id @default(cuid())
-  userId          String
-  title           String
-  description     String   @db.Text
-  patternType     String   // habit | workflow | avoidance | productivity | communication | decision-making
-  frequency       Int      @default(1)
-  confidence      Float    @default(0.5)
-  impactScore     Float    @default(0)
-  evidenceIds     String?  @db.Text // JSON array of observation IDs
-  recommendation  String?  @db.Text
-  status          String   @default("active") // active | monitoring | resolved | suppressed
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([status])
-  @@index([patternType])
-}
-
-model CortexReflection {
-  id                      String   @id @default(cuid())
-  userId                  String
-  timeframe               String   // daily | weekly | monthly
-  summary                 String   @db.Text
-  wins                    String?  @db.Text // JSON array
-  bottlenecks             String?  @db.Text // JSON array
-  recurringThemes         String?  @db.Text // JSON array
-  optimizationSuggestions String?  @db.Text // JSON array
-  executionScore          Float    @default(0)
-  focusScore              Float    @default(0)
-  consistencyScore        Float    @default(0)
-  createdAt               DateTime @default(now())
-  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([timeframe])
-  @@index([createdAt])
-}
-
-model CortexLearningJob {
+// ─── MONEY AGENT: Wealth Arbitrage Events ────────────────────────────────
+model MoneyEvent {
   id        String   @id @default(cuid())
   userId    String
-  type      String   // pattern-analysis | reflection | workflow-optimization | memory-clustering | priority-recalibration
-  payload   String?  @db.Text // JSON
-  status    String   @default("pending") // pending | processing | completed | failed
-  result    String?  @db.Text // JSON
-  attempts  Int      @default(0)
+  type      String   // YIELD_SPREAD | BROKERAGE_FEE | TAX_LOSS_HARVEST
+  payload   Json     // { fromBank, toBank, spread, netAnnualGain, fees }
+  status    String   @default("DETECTED") // DETECTED -> CARD_SHOWN -> APPROVED -> EXECUTED
+  netProfit Float    // after ALL fees/taxes
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
   @@index([type])
 }
 
-model Skill {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  description String?  @db.Text
-  prompt      String   @db.Text
-  tools       String?  @db.Text // JSON array of tool names
-  usageCount  Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+// ─── BUSINESS AGENT: Capital Arbitrage Events ────────────────────────────
+model BusinessEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // WHOLESALE_MARGIN | AD_ROI_ARBITRAGE | SAAS_OVERLAP
+  payload   Json     // { product, retailPrice, wholesalePrice, margin, platform, cac, ltv }
+  status    String   @default("DETECTED") // DETECTED -> CARD_SHOWN -> APPROVED -> EXECUTED
+  netProfit Float    // after ALL fees/taxes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([status])
+  @@index([type])
 }
 
-model SecurityEvent {
-  id        String   @id @default(cuid())
-  jti       String   @unique // JWT ID for deduplication
-  eventType String   // RISC event type URI
-  googleSub String   // Google account subject ID
-  userId    String?  // Resolved app user ID
-  payload   String?  @db.Text // Full decoded event JSON
-  status    String   @default("processed") // processed | failed
-  createdAt DateTime @default(now())
+// ─── SECURE DATA BROKER: Trigger Table / Message Board ───────────────────
+model BrokerMessage {
+  id            String   @id @default(cuid())
+  sourceAgent   String   // MONEY | BUSINESS
+  targetAgent   String   // MONEY | BUSINESS
+  eventType     String   // MONTHLY_CLOSE | RUNWAY_ALERT | SURPLUS_DETECTED | TAX_TIER_CROSSED
+  payload       Json     // { netProfit: 15000, runwayDays: 45, surplus: 15000, taxTier: "22%" }
+  processed     Boolean  @default(false)
+  createdAt     DateTime @default(now())
 
-  @@index([googleSub])
-  @@index([createdAt])
+  @@index([sourceAgent, targetAgent])
+  @@index([processed])
+  @@index([eventType])
 }
 
-model UserPreference {
+// ─── OPPORTUNITY CARDS: Friction Rule (1-click approval) ─────────────────
+model OpportunityCard {
+  id                String   @id @default(cuid())
+  sourceEventId     String   // ref to MoneyEvent or BusinessEvent
+  sourceEventType   String   // MONEY | BUSINESS
+  title             String
+  description       String   @db.Text
+  netBenefit        Float
+  fees              Float
+  taxes             Float
+  requiresApproval  Boolean  @default(true)
+  approved          Boolean  @default(false)
+  executed          Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  approvedAt        DateTime?
+  executedAt        DateTime?
+
+  @@index([sourceEventId])
+  @@index([approved])
+  @@index([executed])
+}
+
+// ─── EMERGENCY RUNWAY: Liquidity Threshold (NEVER TOUCHED) ───────────────
+model EmergencyRunway {
   id          String   @id @default(cuid())
   userId      String   @unique
-  preferences String   @db.Text // JSON object
+  amountCents Int      // protected minimum in cents
+  currency    String   @default("USD")
   updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id])
-}
-
-model CortexContradiction {
-  id            String   @id @default(cuid())
-  userId        String
-  category      String   // preference_conflict | strategic_conflict | goal_conflict | behavioral_conflict | scheduling_conflict | memory_conflict
-  title         String
-  description   String   @db.Text
-  evidenceA     String   @db.Text // first conflicting item
-  evidenceB     String   @db.Text // second conflicting item
-  confidence    Float    @default(0.5)
-  severity      String   @default("medium") // low | medium | high
-  status        String   @default("active") // active | resolved | dismissed
-  resolution    String?  @db.Text // user's resolution
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([status])
 }
 
-// ─── Phase 3: Relationship Mapping, Projects, Insights ──────────────────
-
-model CortexEntity {
+// ─── AGENT BUS MESSAGES (for multi-agent communication) ─────────────────
+model BusMessage {
   id              String   @id @default(cuid())
-  userId          String
-  nodeType        String   // person | project | goal | concept | organization
-  name            String
-  description     String?  @db.Text
-  metadata        String?  @db.Text // JSON: role, context, attributes
-  mentionCount    Int      @default(1)
-  lastMentionedAt DateTime @default(now())
+  source          String   // SETH | AEGIS | HERMES | CLAW | GHOST | QUANTUM
+  target          String   // SETH | AEGIS | HERMES | CLAW | GHOST | QUANTUM
+  messageType     String
+  payload         Json
+  priority        Int      @default(2) // 1=high, 2=normal, 3=low
+  status          String   @default("pending") // pending | delivered | failed
+  sourceSessionId String?
   createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  outgoingEdges   CortexRelation[] @relation("sourceEntity")
-  incomingEdges   CortexRelation[] @relation("targetEntity")
-  projectLinks    CortexProjectLink[]
+  deliveredAt     DateTime?
 
-  @@unique([userId, nodeType, name])
-  @@index([userId])
-  @@index([nodeType])
-  @@index([lastMentionedAt])
-}
-
-model CortexRelation {
-  id           String   @id @default(cuid())
-  userId       String
-  sourceId     String
-  targetId     String
-  edgeType     String   // collaborated_on | mentioned_with | blocked_by | dependent_on | frequently_associated | reports_to | stakeholder_of
-  weight       Float    @default(1.0)
-  metadata     String?  @db.Text // JSON: context, evidence
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  source       CortexEntity @relation("sourceEntity", fields: [sourceId], references: [id], onDelete: Cascade)
-  target       CortexEntity @relation("targetEntity", fields: [targetId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, sourceId, targetId, edgeType])
-  @@index([userId])
-  @@index([sourceId])
-  @@index([targetId])
-}
-
-model CortexProject {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  description String?  @db.Text
-  status      String   @default("active") // active | completed | paused | archived
-  metadata    String?  @db.Text // JSON: goals, milestones, tags
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  links       CortexProjectLink[]
-
-  @@unique([userId, name])
-  @@index([userId])
+  @@index([source, target])
   @@index([status])
-}
-
-model CortexProjectLink {
-  id         String   @id @default(cuid())
-  projectId  String
-  entityType String   // memory | task | observation | conversation | entity
-  entityId   String
-  context    String?  // brief description of why linked
-  linkedAt   DateTime @default(now())
-  project    CortexProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  entity     CortexEntity? @relation(fields: [entityId], references: [id], onDelete: SetNull)
-
-  @@unique([projectId, entityType, entityId])
-  @@index([projectId])
-  @@index([entityType, entityId])
-}
-
-model CortexInsight {
-  id          String   @id @default(cuid())
-  userId      String
-  insightType String   // cognitive_load | strategic_drift | environmental_correlation | temporal_pattern
-  title       String
-  description String   @db.Text
-  severity    String   @default("info") // info | warning | critical
-  confidence  Float    @default(0.5)
-  evidence    String?  @db.Text // JSON: supporting data points
-  status      String   @default("active") // active | acknowledged | dismissed
-  metadata    String?  @db.Text // JSON: extra context
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([insightType])
-  @@index([status])
-}
-
-model TelemetryTrace {
-  id          String   @id @default(cuid())
-  userId      String?
-  traceId     String   @unique            // correlation ID across spans
-  pipeline    String                       // chat | tts | transcribe | memory | graph | routing | tool
-  operation   String                       // e.g. "chat.full", "tts.synthesize", "graph.inject"
-  status      String   @default("ok")     // ok | error | timeout | fallback
-  latencyMs   Int
-  spans       String   @db.Text           // JSON: [{ name, startMs, endMs, meta }]
-  metadata    String?  @db.Text           // JSON: route info, token counts, error details
-  authMethod  String?                      // session | api_key
-  createdAt   DateTime @default(now())
-
-  @@index([pipeline])
-  @@index([status])
-  @@index([createdAt])
-  @@index([userId])
-}
-
-// ─── Agent Working Memory (Swarm State Persistence) ────────────────────
-model AgentMemory {
-  id          String   @id @default(cuid())
-  agentId     String
-  userId      String
-  memoryType  String   // finding | conclusion | handoff | hypothesis | context
-  content     String   @db.Text
-  confidence  Float    @default(0.7)
-  sourceTask  String?  @db.Text // task that produced this memory
-  relatedIds  String?  @db.Text // JSON array of related AgentMemory IDs
-  expiresAt   DateTime? // optional TTL for ephemeral working memory
-  createdAt   DateTime @default(now())
-
-  @@index([agentId, userId])
-  @@index([userId, memoryType])
-  @@index([createdAt])
 }
