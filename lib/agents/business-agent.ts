@@ -178,10 +178,8 @@ function generateMockProducts(count: number = 20): ScrapedProduct[] {
       asin: `B${Math.random().toString(36).substring(2, 12).toUpperCase()}`,
       title: `${item} - Premium ${['Quality', 'Edition', 'Pro', 'Max', 'Ultra'][Math.floor(Math.random() * 5)]}`,
       price: Math.round(retailPrice * 100) / 100,
-      currency: 'USD',
       rating: Math.round(rating * 10) / 10,
       reviewCount,
-      monthlySales,
       bsr,
       category: cat.name,
       estimatedWholesalePrice: Math.round(wholesalePrice * 100) / 100,
@@ -299,7 +297,7 @@ function calculateAdRoiOpportunity(product: ScrapedProduct, adMetrics: AdMetrics
   
   if (netProfitPerSale <= 0) return null;
   
-  const roas = (product_price * conversionRate * ctr) / cpc; // Simplified ROAS
+  const roas = (product.price * conversionRate * ctr) / cpc; // Simplified ROAS
   const roiMultiple = grossMargin / cpa;
   
   if (roiMultiple < THRESHOLDS.AD_ROI_MIN) return null;
@@ -375,6 +373,31 @@ async function runBusinessAgent(userId: string = 'default-user'): Promise<{
     const emergencyRunwayCents = runway?.amountCents || 1000000; // $10k default
     console.log(`[BusinessAgent] Emergency runway: $${(emergencyRunwayCents/100).toLocaleString()}`);
 
+    // Compute runway days for AEGIS
+    let runwayDays = 999;
+    try {
+      const latestEvents = await prisma.moneyEvent.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      });
+      const uniqueBalances = new Map<string, number>();
+      for (const ev of latestEvents) {
+        const p = ev.payload as any;
+        if (p?.fromAccount && p?.currentBalance !== undefined) {
+          uniqueBalances.set(p.fromAccount, p.currentBalance);
+        }
+      }
+      const totalBalances = Array.from(uniqueBalances.values()).reduce((s, b) => s + b, 0);
+      const estimatedMonthlyBurn = totalBalances > 0 ? totalBalances * 0.05 : 5000;
+      const estimatedDailyBurn = estimatedMonthlyBurn / 30;
+      runwayDays = estimatedDailyBurn > 0 ? Math.floor((emergencyRunwayCents / 100) / estimatedDailyBurn) : 999;
+      console.log(`[BusinessAgent] Runway: ${runwayDays} days (${uniqueBalances.size} accounts, $${totalBalances.toFixed(0)})`);
+    } catch {
+      const estimatedDailyBurn = 5000 / 30;
+      runwayDays = Math.floor((emergencyRunwayCents / 100) / estimatedDailyBurn);
+    }
+
     // Write to database
     let businessEventsCreated = 0;
     let opportunityCardsCreated = 0;
@@ -422,7 +445,7 @@ async function runBusinessAgent(userId: string = 'default-user'): Promise<{
 
       // AEGIS Policy Gate: Evaluate opportunity before creating card
       const aegisResult = await evaluateOpportunity({
-        type: 'BUSINESS', // Both WHOLESALE_MARGIN and AD_ROI_ARBITRAGE are business ops
+        type: 'BUSINESS',
         netBenefit: opp.estimatedMonthlyProfit,
         // Monthly fees: Amazon referral (15% of revenue) + FBA fees (~10%) = 25% of revenue
         fees: opp.type === 'WHOLESALE_MARGIN' 
@@ -432,6 +455,9 @@ async function runBusinessAgent(userId: string = 'default-user'): Promise<{
         riskFactors: opp.riskFactors,
         paybackMonths: opp.paybackMonths,
         totalInvestment: opp.totalInvestment,
+        runwayDays,
+        sourceEventId: businessEvent.id,
+        userId,
       }, emergencyRunwayCents);
 
       console.log(`[AEGIS] ${businessEvent.id}: ${aegisResult.passed ? 'PASS' : 'FAIL'} (score: ${aegisResult.score})`);
